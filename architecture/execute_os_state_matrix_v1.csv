@@ -1,0 +1,35 @@
+Entity,Current State,Trigger,Proposed By,Committed By,Validations,Side Effects,Next State
+ExecutionSystem,draft,GenerateExecutionSystem,Generation Service,Orchestrator,valid tenant and goal defined,create first system version,generated
+ExecutionSystem,generated,ActivateSystem,Orchestrator,Orchestrator,active version exists,initialize system runtime,active
+ExecutionSystem,active,PauseSystem,Execution Service,Orchestrator,system active,pause instances,paused
+ExecutionSystem,paused,ResumeSystem,Execution Service,Orchestrator,system paused,resume instances,active
+ExecutionSystem,active,SystemBlocked,Execution Service,Orchestrator,repeated blockers detected,record system blocker,blocked
+ExecutionSystem,active,SystemCompleted,Execution Service,Orchestrator,all phases complete,emit system_completed event,completed
+ExecutionSystem,active,AdaptationApproved,Adaptation Service,Orchestrator,adaptation proposal approved,create new version and mark instances update_available,active
+ExecutionSystem,any,ArchiveSystem,Orchestrator,Orchestrator,owner permission,mark archived,archived
+ExecutionInstance,ready,CreateExecutionSession,Execution Service,Orchestrator,instance valid and version exists,create session record,ready
+ExecutionInstance,ready,ActivateExecutionSession,Execution Service,Orchestrator,session started,set instance running,running
+ExecutionInstance,running,TaskBlockedThreshold,Execution Service,Orchestrator,repeated block events,emit blocked signal,blocked
+ExecutionInstance,running,StallDetected,Pattern Service,Orchestrator,inactivity threshold reached,flag stalled state,stalled
+ExecutionInstance,blocked,ResumeExecution,Execution Service,Orchestrator,blocker cleared,reopen session,running
+ExecutionInstance,stalled,ResumeExecution,Execution Service,Orchestrator,new session started,emit recovery event,running
+ExecutionInstance,running,PhaseCompleted,Execution Service,Orchestrator,all tasks completed in phase,increment phase pointer,running
+ExecutionInstance,running,SystemCompleted,Execution Service,Orchestrator,final phase finished,finalize execution,completed
+ExecutionInstance,running,AbandonSystem,User,Orchestrator,owner confirmation,close sessions,abandoned
+ExecutionSession,started,ActivateSession,Execution Service,Orchestrator,instance running,emit session_started event,active
+ExecutionSession,active,TaskCompleted,Execution Service,Orchestrator,valid task index,append execution event,active
+ExecutionSession,active,TaskBlocked,Execution Service,Orchestrator,blocker recorded,append block event,active
+ExecutionSession,active,TaskSkipped,Execution Service,Orchestrator,valid task index,append skip event,active
+ExecutionSession,active,PhaseCompleted,Execution Service,Orchestrator,all tasks done,append phase event,active
+ExecutionSession,active,SessionComplete,Execution Service,Orchestrator,final task done,append completion event,completed
+ExecutionSession,active,SessionInterrupted,Execution Service,Orchestrator,inactivity timeout,emit interruption event,interrupted
+ExecutionSession,active,SessionFailed,Execution Service,Orchestrator,system error detected,emit failure event,failed
+PublicSystem,private,PublishSystem,Publication Service,Orchestrator,system completed and version exists,create public artifact,published
+PublicSystem,published,ArchivePublicSystem,Publication Service,Orchestrator,creator permission,remove from index,archived
+Proof,self_reported,SubmitProof,User,Orchestrator,valid instance reference,append proof record,pending_review
+Proof,pending_review,VerifyProof,Curator,Orchestrator,verification rules satisfied,update ranking signals,verified
+Proof,pending_review,RejectProof,Curator,Orchestrator,moderation check,flag rejected proof,rejected
+ExecutionInstance,no_update,NewVersionCreated,Adaptation Service,Orchestrator,structural change detected,notify instance owner,update_available
+ExecutionInstance,update_available,SuggestMigration,Orchestrator,Orchestrator,version compatible,notify user,migration_suggested
+ExecutionInstance,migration_suggested,AcceptMigration,User,Orchestrator,owner permission,update version pointer,migration_accepted
+ExecutionInstance,migration_accepted,MigrationComplete,Orchestrator,Orchestrator,version validated,emit migration event,migration_completed
